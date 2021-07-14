@@ -27,5 +27,8 @@ clean:
 lint:
 	golangci-lint run
 
+test:
+	$(GO) test ./...
+
 .PHONY: build linux
 
