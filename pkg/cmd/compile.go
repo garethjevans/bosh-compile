@@ -3,7 +3,6 @@ package cmd
 import (
 	"bosh-compile/pkg"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -85,23 +84,23 @@ func (c *CompileCmd) Run() error {
 		}
 	}
 
-	log.Printf("Found dependencies\n")
+	logrus.Infof("Found dependencies")
 	for _, p := range manifest.Packages {
 		result, err := graph.TopSort(p.Name)
 		if err != nil {
 			return err
 		}
-		log.Printf("\t%s -> %s\n", p.Name, result)
+		logrus.Infof("\t%s -> %s", p.Name, result)
 	}
 
-	log.Printf("Extracting Packages\n")
+	logrus.Infof("Extracting Packages")
 	for _, p := range manifest.Packages {
-		log.Printf("\t%s...\n", p.Name)
+		logrus.Infof("\t%s...", p.Name)
 		packageFolder := filepath.Join(tempDir, "packages", p.Name)
 		packageGzip := filepath.Join(tempDir, "packages", p.Name+".tgz")
 		packageGzipFile, err := os.Open(packageGzip)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		pkg.ExtractTarGz(packageFolder, packageGzipFile)
 	}
@@ -125,9 +124,9 @@ func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
 	for _, build := range buildOrder {
 
 		if isAlreadyBuilt(tempDir, build) {
-			log.Println("build > " + build + ", Skipping")
+			logrus.Infof("build > %s, Skipping", build)
 		} else {
-			log.Println("build > " + build)
+			logrus.Infof("build > %s", build)
 			workDir := filepath.Join(tempDir, "packages", build)
 
 			boshInstallTarget := filepath.Join(tempDir, "target", build)
@@ -136,10 +135,9 @@ func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
 				return err
 			}
 			os.MkdirAll(boshInstallTarget, 0755)
-			output, err := pkg.Exec(workDir, boshInstallTarget, "/bin/bash", "packaging")
-			log.Println(output)
+			_, err := pkg.Exec(workDir, boshInstallTarget, "/bin/bash", "packaging")
 			if err != nil {
-				log.Fatalf("Unable to execute command = %s, %s", err, output)
+				logrus.Fatalf("Unable to execute command = %s", err)
 				return err
 			}
 		}
