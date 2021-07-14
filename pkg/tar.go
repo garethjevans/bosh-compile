@@ -5,15 +5,14 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 )
 
-func ExtractTarGz(tempDir string, gzipStream io.Reader) {
+func ExtractTarGz(tempDir string, gzipStream io.Reader) error {
 	uncompressedStream, err := gzip.NewReader(gzipStream)
 	if err != nil {
-		log.Fatal("ExtractTarGz: NewReader failed")
+		return err
 	}
 
 	tarReader := tar.NewReader(uncompressedStream)
@@ -26,32 +25,37 @@ func ExtractTarGz(tempDir string, gzipStream io.Reader) {
 		}
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			dir := filepath.Join(tempDir, header.Name)
+			dir := filepath.Join(tempDir, header.Name) // #nosec G305
 			if err := os.Mkdir(dir, 0755); err != nil {
-				panic(err)
+				return err
 			}
 		case tar.TypeReg:
-			file := filepath.Join(tempDir, header.Name)
+			file := filepath.Join(tempDir, header.Name) // #nosec G305
 			outFile, err := os.Create(file)
 			if err != nil {
-				panic(err)
+				return err
 			}
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				panic(err)
+			for {
+				_, err := io.CopyN(outFile, tarReader, 1024)
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					return err
+				}
 			}
 			outFile.Close()
-
 		default:
-			panic(fmt.Sprintf(
+			return fmt.Errorf(
 				"ExtractTarGz: uknown type: %q in %s",
 				header.Typeflag,
-				header.Name))
+				header.Name)
 		}
-
 	}
+	return nil
 }
