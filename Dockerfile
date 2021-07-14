@@ -4,7 +4,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETPLATFORM
 
-COPY build/linux/bosh-compile /usr/bin/bosh-compile
+COPY build/linux/bosh-compile /usr/bin/bc
 COPY entrypoint.sh /usr/bin/entrypoint.sh
 
 ENTRYPOINT [ "/usr/bin/entrypoint.sh" ]

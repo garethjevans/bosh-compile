@@ -2,5 +2,5 @@
 
 set -e
 
-bosh-compile --file "${INPUT_FILE}" --packages "${INPUT_PACKAGES}"
+bc compile --file "${INPUT_FILE}" --packages "${INPUT_PACKAGES}"
 
