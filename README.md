@@ -10,7 +10,7 @@ The aim of this project is to create a GitHub action that can be used to create 
 
 ## Docs
 
-[./docs/bc.md]
+[CLI Documentation](./docs/bc.md) can be found here.
 
 ## License
 
