@@ -9,17 +9,17 @@ import (
 )
 
 var (
-	// colorStatus returns a new function that returns status-colorized (cyan) strings for the
+	// ColorStatus returns a new function that returns status-colorized (cyan) strings for the
 	// given arguments with fmt.Sprint().
-	colorStatus = color.New(color.FgCyan).SprintFunc()
+	ColorStatus = color.New(color.FgCyan).SprintFunc()
 
-	// colorWarn returns a new function that returns status-colorized (yellow) strings for the
+	// ColorWarn returns a new function that returns status-colorized (yellow) strings for the
 	// given arguments with fmt.Sprint().
-	colorWarn = color.New(color.FgYellow).SprintFunc()
+	ColorWarn = color.New(color.FgYellow).SprintFunc()
 
-	// colorError returns a new function that returns error-colorized (red) strings for the
+	// ColorError returns a new function that returns error-colorized (red) strings for the
 	// given arguments with fmt.Sprint().
-	colorError = color.New(color.FgRed).SprintFunc()
+	ColorError = color.New(color.FgRed).SprintFunc()
 )
 
 // TextFormat lets use a custom text format.
@@ -52,17 +52,17 @@ func (f *TextFormat) Format(entry *logrus.Entry) ([]byte, error) {
 	switch level {
 	case "INFO":
 		if f.ShowInfoLevel {
-			b.WriteString(colorStatus(level))
+			b.WriteString(ColorStatus(level))
 			b.WriteString(": ")
 		}
 	case "WARNING":
-		b.WriteString(colorWarn(level))
+		b.WriteString(ColorWarn(level))
 		b.WriteString(": ")
 	case "DEBUG":
-		b.WriteString(colorStatus(level))
+		b.WriteString(ColorStatus(level))
 		b.WriteString(": ")
 	default:
-		b.WriteString(colorError(level))
+		b.WriteString(ColorError(level))
 		b.WriteString(": ")
 	}
 	if f.ShowTimestamp {
