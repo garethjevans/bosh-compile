@@ -6,11 +6,13 @@ The aim of this project is to create a GitHub action that can be used to create 
 
 ## Usage
 
-// TODO
+```shell
+bc compile --file <path-to-bosh-release>.tgz --packages <package-to-compile>
+```
 
 ## Docs
 
-[./docs/bc.md]
+[CLI Documentation](./docs/bc.md) can be found here.
 
 ## License
 
