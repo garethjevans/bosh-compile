@@ -72,14 +72,23 @@ func (c *CompileCmd) Run() error {
 	if err != nil {
 		return err
 	}
-	os.MkdirAll(tempDir, 0755)
+
+	err = os.MkdirAll(tempDir, 0755)
+	if err != nil {
+		return err
+	}
+
 	defer os.RemoveAll(tempDir)
 
 	r, err := os.Open(c.File)
 	if err != nil {
 		return err
 	}
-	pkg.ExtractTarGz(tempDir, r)
+
+	err = pkg.ExtractTarGz(tempDir, r)
+	if err != nil {
+		return err
+	}
 
 	manifest, err := readManifest(tempDir)
 	if err != nil {
@@ -91,7 +100,10 @@ func (c *CompileCmd) Run() error {
 
 	for _, p := range manifest.Packages {
 		for _, d := range p.Dependencies {
-			graph.AddEdge(p.Name, d)
+			err = graph.AddEdge(p.Name, d)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -113,7 +125,10 @@ func (c *CompileCmd) Run() error {
 		if err != nil {
 			return err
 		}
-		pkg.ExtractTarGz(packageFolder, packageGzipFile)
+		err = pkg.ExtractTarGz(packageFolder, packageGzipFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	logrus.Infof("Building Packages\n")
@@ -161,11 +176,17 @@ func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
 			if err != nil {
 				return err
 			}
-			os.MkdirAll(boshInstallTarget, 0755)
+
+			err = os.MkdirAll(boshInstallTarget, 0755)
+			if err != nil {
+				return err
+			}
+
 			_, err = pkg.Exec(boshCompileTarget, boshInstallTarget, "/bin/bash", "packaging")
 			if err != nil {
 				logrus.Fatalf("Unable to execute command = %+v", err)
 			}
+
 			symlinkPath := fmt.Sprintf("/var/vcap/packages/%s", build)
 			logrus.Infof("Creating symlink %s to %s", symlinkPath, boshInstallTarget)
 
@@ -181,7 +202,6 @@ func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
 			if err != nil {
 				logrus.Fatalf("Unable to create symlink = %+v", err)
 			}
-
 		}
 	}
 	return nil

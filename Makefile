@@ -24,5 +24,8 @@ docs: build
 clean:
 	rm -fr build
 
+lint:
+	golangci-lint run
+
 .PHONY: build linux
 
