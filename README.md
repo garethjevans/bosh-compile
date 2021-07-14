@@ -6,7 +6,9 @@ The aim of this project is to create a GitHub action that can be used to create 
 
 ## Usage
 
-// TODO
+```shell
+bc compile --file <path-to-bosh-release>.tgz --packages <package-to-compile>
+```
 
 ## Docs
 
