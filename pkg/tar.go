@@ -48,7 +48,7 @@ func ExtractTarGz(tempDir string, gzipStream io.Reader) {
 
 		default:
 			panic(fmt.Sprintf(
-				"ExtractTarGz: uknown type: %s in %s",
+				"ExtractTarGz: uknown type: %q in %s",
 				header.Typeflag,
 				header.Name))
 		}
