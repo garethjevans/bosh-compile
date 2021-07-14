@@ -11,5 +11,12 @@ BUILDTAGS :=
 build:
 	CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(BUILDTAGS) $(BUILDFLAGS) -o build/bosh-compile cmd/main.go
 
-.PHONY: build
+linux:
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=amd64 $(GO) build $(BUILDTAGS) $(BUILDFLAGS) -o build/linux/bosh-compile cmd/main.go
+
+docker: linux
+	docker build -t garethjevans/bosh-compile:latest .
+	docker push garethjevans/bosh-compile:latest
+
+.PHONY: build linux
 

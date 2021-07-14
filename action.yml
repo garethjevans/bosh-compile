@@ -1,0 +1,15 @@
+# action.yml
+name: "bosh-compiler"
+description: "Compiles a bosh release without using a director"
+
+inputs:
+  file:
+    description: "Location of the file to compile"
+    required: true
+  packages:
+    description: "List of packages to compile"
+    required: true
+
+runs:
+  using: "docker"
+  image: "docker://garethjevans/bosh-compile:latest"
