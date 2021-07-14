@@ -1,0 +1,5 @@
+#!/bin/sh
+
+which readlink
+echo $* >> log.txt
+readlink $*
