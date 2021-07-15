@@ -16,6 +16,7 @@ compile --file <file> --packages <packages...>
 
 ```
   -f, --file string            Path to the bosh release to compile
+  -g, --guess                  Attempt to guess the top level packages that need to be compiled
   -p, --packages stringArray   Packages to attempt to compile
 ```
 

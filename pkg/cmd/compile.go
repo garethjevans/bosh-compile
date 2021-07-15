@@ -20,6 +20,7 @@ type CompileCmd struct {
 	Args     []string
 	File     string
 	Packages []string
+	Guess    bool
 }
 
 // NewCompileCmd creates a new compile command.
@@ -45,6 +46,7 @@ func NewCompileCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&c.File, "file", "f", "", "Path to the bosh release to compile")
 	cmd.Flags().StringArrayVarP(&c.Packages, "packages", "p", []string{}, "Packages to attempt to compile")
+	cmd.Flags().BoolVarP(&c.Guess, "guess", "g", false, "Attempt to guess the top level packages that need to be compiled")
 
 	return cmd
 }
@@ -54,7 +56,7 @@ func (c *CompileCmd) Run() error {
 		return errors.New("--file parameter is missing")
 	}
 
-	if len(c.Packages) == 0 {
+	if len(c.Packages) == 0 && !c.Guess {
 		return errors.New("nothing to build, use the --packages parameter")
 	}
 
@@ -83,6 +85,13 @@ func (c *CompileCmd) Run() error {
 	manifest, err := readManifest(tempDir)
 	if err != nil {
 		return err
+	}
+
+	if c.Guess {
+		c.Packages, err = manifest.TopLevelPackages()
+		if err != nil {
+			return err
+		}
 	}
 
 	logrus.Infof("Found dependencies")

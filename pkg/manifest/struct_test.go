@@ -2,8 +2,13 @@ package manifest_test
 
 import (
 	"bosh-compile/pkg/manifest"
-	"reflect"
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestCanCreateManifest(t *testing.T) {
@@ -32,12 +37,8 @@ func TestCanCreateManifest(t *testing.T) {
 
 	for _, tc := range tests {
 		got, err := m.Dependencies(tc.node)
-		if err != nil {
-			t.Fail()
-		}
-		if !reflect.DeepEqual(tc.want, got) {
-			t.Fatalf("expected: %v, got: %v", tc.want, got)
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, tc.want, got)
 	}
 }
 
@@ -53,14 +54,68 @@ func TestDetermineTopLevelPackages(t *testing.T) {
 	}
 
 	got, err := m.TopLevelPackages()
-	if err != nil {
-		t.Fail()
+	assert.NoError(t, err)
+	assert.Equal(t, len(got), 2)
+	expected := []string{"go-application", "java-application"}
+	assert.Equal(t, expected, got)
+}
+
+func TestCanParseRealManifest(t *testing.T) {
+	bytes, err := ioutil.ReadFile(filepath.Join("test_data", "release.MF"))
+	assert.NoError(t, err)
+
+	m := manifest.Manifest{}
+
+	err = yaml.Unmarshal(bytes, &m)
+	assert.NoError(t, err)
+
+	type test struct {
+		node string
+		want []string
 	}
-	if len(got) != 3 {
-		t.Fail()
+
+	fmt.Printf("found %+v\n", m)
+	t.Logf("found %+v", m)
+
+	tests := []test{
+		{node: "golangapiserver", want: []string{"golang", "autoscaler-src", "golangapiserver"}},
+		{node: "db", want: []string{"java", "maven", "db"}},
+		{node: "maven", want: []string{"java", "maven"}},
+		{node: "java", want: []string{"java"}},
+		{node: "golang", want: []string{"golang"}},
 	}
-	expected := []string{"go-application", "java-application", "maven"}
-	if !reflect.DeepEqual(expected, got) {
-		t.Fatalf("expected: %v, got: %v", expected, got)
+
+	for _, tc := range tests {
+		got, err := m.Dependencies(tc.node)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.want, got)
 	}
+}
+
+func TestCanDetermineBestBuildListFromRealManifest(t *testing.T) {
+	bytes, err := ioutil.ReadFile(filepath.Join("test_data", "release.MF"))
+	assert.NoError(t, err)
+
+	m := manifest.Manifest{}
+
+	err = yaml.Unmarshal(bytes, &m)
+	assert.NoError(t, err)
+
+	got, err := m.TopLevelPackages()
+	assert.NoError(t, err)
+
+	expected := []string{
+		"changeloglockcleaner",
+		"common",
+		"db",
+		"eventgenerator",
+		"golangapiserver",
+		"metricsforwarder",
+		"metricsgateway",
+		"metricsserver",
+		"operator",
+		"scalingengine",
+		"scheduler",
+	}
+	assert.Equal(t, expected, got)
 }

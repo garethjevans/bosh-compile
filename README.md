@@ -6,8 +6,16 @@ The aim of this project is to create a GitHub action that can be used to create 
 
 ## Usage
 
+Specify a list of packages to build:
+
 ```shell
 bc compile --file <path-to-bosh-release>.tgz --packages <package-to-compile>
+```
+
+Allow `bc` to determine the best packages to build: 
+
+```shell
+bc compile --file <path-to-bosh-release>.tgz --guess
 ```
 
 ## Docs
