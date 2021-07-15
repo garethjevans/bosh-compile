@@ -6,9 +6,10 @@ inputs:
   file:
     description: "Location of the file to compile"
     required: true
-  packages:
-    description: "List of packages to compile"
+  args:
+    description: "Args to pass to the bc command"
     required: true
+    default: --guess  
 
 runs:
   using: "docker"
