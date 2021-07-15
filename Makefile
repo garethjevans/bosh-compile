@@ -28,7 +28,7 @@ lint:
 	golangci-lint run
 
 test:
-	$(GO) test ./...
+	$(GO) test -cover ./...
 
 .PHONY: build linux
 

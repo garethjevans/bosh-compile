@@ -38,20 +38,32 @@ func (m *Manifest) Dependencies(name string) ([]string, error) {
 }
 
 func (m *Manifest) TopLevelPackages() ([]string, error) {
-	graph, err := m.Graph()
-	if err != nil {
-		return nil, err
-	}
-
 	topLevel := []string{}
+	// for each package
 	for _, p := range m.Packages {
-		r, err := graph.TopSort(p.Name)
-		if err != nil {
-			return nil, err
+		isDependency := false
+		for _, p2 := range m.Packages {
+			if p.Name == p2.Name {
+				// skip
+			}
+			// if current package is used as a dependency elsewhere, do not add
+			if arrayContains(p2.Dependencies, p.Name) {
+				isDependency = true
+			}
 		}
-		if len(r) > 1 {
+
+		if !isDependency {
 			topLevel = append(topLevel, p.Name)
 		}
 	}
 	return topLevel, nil
+}
+
+func arrayContains(arr []string, val string) bool {
+	for _, a := range arr {
+		if a == val {
+			return true
+		}
+	}
+	return false
 }
