@@ -14,4 +14,3 @@ inputs:
 runs:
   using: "docker"
   image: "docker://garethjevans/bosh-compile:latest"
-  entrypoint: 'github-actions-entrypoint.sh'
