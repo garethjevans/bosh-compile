@@ -207,6 +207,7 @@ func readManifest(tempDir string) (manifest.Manifest, error) {
 	if err != nil {
 		return manifest.Manifest{}, err
 	}
+	logrus.Debugf("Manifest = %s", string(yamlFile))
 
 	m := manifest.Manifest{}
 	err = yaml.Unmarshal(yamlFile, &m)
