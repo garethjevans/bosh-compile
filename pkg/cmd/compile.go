@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bosh-compile/pkg"
+	"bosh-compile/pkg/manifest"
 	"bosh-compile/pkg/util"
 	"errors"
 	"fmt"
@@ -11,19 +12,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/stevenle/topsort"
 	"gopkg.in/yaml.v2"
 )
-
-type Package struct {
-	Name         string   `yaml:"name"`
-	Dependencies []string `yaml:"dependencies"`
-}
-
-type Manifest struct {
-	Name     string    `yaml:"name"`
-	Packages []Package `yaml:"packages"`
-}
 
 type CompileCmd struct {
 	Cmd      *cobra.Command
@@ -95,21 +85,9 @@ func (c *CompileCmd) Run() error {
 		return err
 	}
 
-	// Initialize the graph.
-	graph := topsort.NewGraph()
-
-	for _, p := range manifest.Packages {
-		for _, d := range p.Dependencies {
-			err = graph.AddEdge(p.Name, d)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	logrus.Infof("Found dependencies")
 	for _, p := range manifest.Packages {
-		result, err := graph.TopSort(p.Name)
+		result, err := manifest.Dependencies(p.Name)
 		if err != nil {
 			return err
 		}
@@ -138,7 +116,12 @@ func (c *CompileCmd) Run() error {
 		logrus.Infof(util.ColorError("###############################################"))
 		logrus.Infof("\t\t%s", util.ColorError(packageToTest))
 		logrus.Infof(util.ColorError("###############################################"))
-		err = BuildAll(tempDir, graph, packageToTest)
+		toBuild, err := manifest.Dependencies(packageToTest)
+		if err != nil {
+			logrus.Info("::endgroup::")
+			return err
+		}
+		err = BuildAll(tempDir, toBuild, packageToTest)
 		if err != nil {
 			logrus.Info("::endgroup::")
 			return err
@@ -148,13 +131,7 @@ func (c *CompileCmd) Run() error {
 	return nil
 }
 
-func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
-	// lets start with the db first...
-	buildOrder, err := graph.TopSort(packageName)
-	if err != nil {
-		return err
-	}
-
+func BuildAll(tempDir string, buildOrder []string, packageName string) error {
 	for _, build := range buildOrder {
 		if isAlreadyBuilt(tempDir, build) {
 			logrus.Infof(util.ColorWarn("\t#######################################"))
@@ -167,7 +144,7 @@ func BuildAll(tempDir string, graph *topsort.Graph, packageName string) error {
 			workDir := filepath.Join(tempDir, "packages", build)
 
 			boshInstallTarget := filepath.Join(tempDir, "target", build)
-			boshInstallTarget, err = filepath.Abs(boshInstallTarget)
+			boshInstallTarget, err := filepath.Abs(boshInstallTarget)
 			if err != nil {
 				return err
 			}
@@ -215,17 +192,17 @@ func isAlreadyBuilt(tempDir string, packageName string) bool {
 	return true
 }
 
-func readManifest(tempDir string) (Manifest, error) {
+func readManifest(tempDir string) (manifest.Manifest, error) {
 	manifestPath := filepath.Join(tempDir, "release.MF")
 	yamlFile, err := ioutil.ReadFile(manifestPath)
 	if err != nil {
-		return Manifest{}, err
+		return manifest.Manifest{}, err
 	}
 
-	m := Manifest{}
+	m := manifest.Manifest{}
 	err = yaml.Unmarshal(yamlFile, &m)
 	if err != nil {
-		return Manifest{}, err
+		return manifest.Manifest{}, err
 	}
 
 	return m, nil
